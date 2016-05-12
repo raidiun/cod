@@ -14,7 +14,7 @@
 #define PORT 9898
 #define BUFSIZE 1024
 
-void testCrypto() {
+void testAsymCrypto() {
 	Digest_t digest;
 
 	RAND_seed(&(digest.data),DHTD_DIGEST_LENGTH);
@@ -40,6 +40,44 @@ void testCrypto() {
 	printf("Verifying signature...");
 	int verify = verifySignature(digest, sig, (PubKey_t) keyPair);
 	printf("Done, result: %i\r\n",verify);
+	}
+
+void testSymCrypto() {
+	char content[] = "Lorem ipsum dolor sit amet";
+
+	SymKey_t key;
+	for(int i=0; i<DHTD_SYMKEY_BYTE_LENGTH; i++) {
+		key.data[i] = 'A';
+		}
+
+	SymIV_t iv;
+	for(int i=0; i<DHTD_SYMIV_BYTE_LENGTH; i++) {
+		iv.data[i] = 'A';
+		}
+
+
+	uint8_t* encBytes;
+	int encLen;
+
+	printf("Encrypting...\r\n");
+	encryptByteStream((uint8_t*) content, strlen(content), &key, &iv, &encBytes, &encLen);
+	printf("Done.\r\nGot bytes:\r\n");
+	for( int i = 0; i < encLen; i++ ) {
+		printf("%02x",encBytes[i]);
+		}
+	printf("\r\n");
+
+	uint8_t* decBytes;
+	int decLen;	
+
+	printf("Decrypting...\r\n");
+	decryptByteStream(encBytes, encLen, &key, &iv, &decBytes, &decLen);
+	printf("Done.\r\nGot bytes:\r\n");
+	for( int i = 0; i < decLen; i++ ) {
+		printf("%c",decBytes[i]);
+		}
+	printf("\r\n");
+
 	}
 
 void testMessaging() {
@@ -126,6 +164,84 @@ void testOutboundSocket(int port) {
 	sendto(sockfd, message, strlen(message), 0, (struct sockaddr*) &sendTo, sizeof(SockAddr_t));
 	}
 
+void hexDump(uint8_t* bytes, int len) {
+	printf("XD:");
+	for(int i=0; i<len; i++) {
+		printf("%02x",bytes[i]);
+		}
+	printf("\r\n");
+	}
+
+void testFullMessagePath() {
+	Digest_t digest;
+
+	RAND_seed(&(digest.data),DHTD_DIGEST_LENGTH);
+
+	printf("Generating RSA Keypair...");
+	RSA* keyPair = RSA_generate_key(2048, 65537, NULL, NULL);
+	printf("Done\r\n");
+
+	printf("Building message...      ");
+	Message_t message;
+	char content[] = "Lorem ipsum dolor sit amet";
+	message.type = MT_FIND;
+	message.nodeID = (NodeID_t) 0x0102030405060708;
+	message.content = (void*) content;
+	message.length = strlen(content);
+	printf("Done\r\n");
+	
+	printf("Enbyteing message...     ");
+	uint8_t* bytes = NULL;
+	int len = 0;
+	getBytesFromMessage(message, &bytes, &len);
+	printf("Done\r\n");
+	hexDump(bytes,len);
+	
+	printf("Signing message...       ");
+	signByteStream(bytes,len, (SecKey_t) keyPair);
+	printf("Done\r\n");
+	hexDump(bytes,len);
+
+	printf("Encrypting message...    ");
+	SymKey_t key = {"abcdefghijklmnopqrstuvwxyz01234"};
+	SymIV_t iv = {"0123456789abcde"};
+	uint8_t* encBytes;
+	int encLen;
+	encryptByteStream((uint8_t*) bytes, len, &key, &iv, &encBytes, &encLen);
+	printf("Done\r\n");
+	
+	free(bytes);
+	hexDump(encBytes,encLen);
+	
+	printf("Decrypting message...    ");
+	uint8_t* decBytes;
+	int decLen;
+	decryptByteStream(encBytes, encLen, &key, &iv, &decBytes, &decLen);
+	printf("Done\r\n");
+	
+	free(encBytes);
+	
+	printf("Verifying bytes...       ");
+	int res = verifyByteStream(decBytes, decLen, (PubKey_t) keyPair);
+	printf("Done (%i)\r\n",res);
+
+	printf("Debyteing message...     ");
+	Message_t ret;
+	getMessageFromBytes(decBytes, decLen, &ret);
+	printf("Done\r\n");
+	
+	free(decBytes);
+	
+	printf("\
+Final message:\r\n\
+ Type:    %i\r\n\
+ nodeID:  %016llx\r\n\
+ length:  %i\r\n\
+ content: %.*s\r\n",
+ ret.type, ret.nodeID, ret.length, ret.length, ret.content);
+
+	}
+
 int main(int argc, char** argv) {
 
 	int port;
@@ -136,17 +252,22 @@ int main(int argc, char** argv) {
 		port = PORT;
 		}
 
-	testCrypto();
-	testMessaging();
+//	testAsymCrypto();
+//	testSymCrypto();
+//	testMessaging();
+
+	testFullMessagePath();
+
+
 //	testInboundSocket(port);
 
-	pthread_t listenerThread;
-	pthread_create(&listenerThread, NULL, &testInboundSocket, (void*) port);
+//	pthread_t listenerThread;
+//	pthread_create(&listenerThread, NULL, &testInboundSocket, (void*) port);
 
-	sleep(1);
-	testOutboundSocket(port);
-	
-	pause();
+//	sleep(1);
+//	testOutboundSocket(port);
+
+//	pause();
 	
 	exit(1);
 	}

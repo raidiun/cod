@@ -1,8 +1,5 @@
 #include "crypto.h"
 
-#include "/usr/local/include/openssl/evp.h"
-#include "/usr/local/include/openssl/rsa.h"
-
 #define HASH_ALGO NID_sha256
 
 #ifdef OPENSSL_1_1

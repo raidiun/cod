@@ -30,12 +30,12 @@ typedef struct {
 #define SIGNATURE_LENGTH sizeof(Signature_t)
 
 /* getMessageFromBytes: Parse a message from <bytes> of length <len> into Message_t structure <message>
-    NB: Byte sequence signature is not verified; see verifyByteStream
+    The byte sequence signature is not verified; see verifyByteStream
 */
 int getMessageFromBytes(uint8_t* bytes, int len, Message_t* message);
 
 /* getBytesFromMessage: Produce a byte sequence of length <*len> beginning at <*bytes> from <message>
-    NB: Byte sequence produced is not signed; see signByteStream
+    The byte sequence produced is not signed; see signByteStream
 */
 int getBytesFromMessage(Message_t message, uint8_t** bytes, int* len);
 
@@ -46,5 +46,15 @@ int verifyByteStream(uint8_t* bytes, int len, PubKey_t pubKey);
 /* signByteStream: Sign the sequence <bytes> of length <len> with <privKey>
 */
 int signByteStream(uint8_t* bytes, int len, SecKey_t privKey);
+
+/* encodeMessage: Encode the <message> for a specific <recipient> from the <sender>.
+    The result is of length <*len> and begins at <*bytes>
+*/
+int encodeMessage(Message_t message, NodeInfo_t* sender, NodeInfo_t* recipient ,uint8_t** bytes, int* len);
+
+/* decodeMessage: Decode the byte stream of length <len> beginning at <bytes> sent to <recipient>.
+    The result is placed in <message>
+*/
+int decodeMessage(uint8_t* bytes, int len, NodeInfo_t* recipient, Message_t* message);
 
 #endif//DHTD_MESSAGE_H
