@@ -9,7 +9,7 @@ all: $(OBJS)
 	$(CC) $(CFLAGS) $(INC_PATHS) -MMD -MF.$*.dep -MT$@ -o $@ -c $<
 
 ../../build/$(DIR):
-	mkdir ../../build/$(DIR)
+	-mkdir ../../build/$(DIR)
 
 clean:
-	rm .*.dep
+	-rm .*.dep
