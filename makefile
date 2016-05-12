@@ -17,7 +17,7 @@ default: dhtd makefile
 -include $(patsubst)
 
 dhtd: $(OBJS) src/main.c
-	$(CC) $^ $(LIBS) -o dhtd
+	$(CC) $(CFLAGS) $^ $(LIBS) -o dhtd
 
 build/%.o: src/%.c | build
 	$(MAKE) -f ../../dirMaker.mk -C $(dir $<) ../../$@

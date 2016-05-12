@@ -36,7 +36,7 @@ int getBytesFromMessage(Message_t message, uint8_t** bytes, int* len) {
 	memcpy( (void*) &(*bytes)[TYPE_LENGTH+SENDER_LENGTH], (void*) &(message.length), LENGTH_LENGTH );
 
 	// Copy in content
-	memcpy( (void*) &(*bytes)[TYPE_LENGTH+SENDER_LENGTH+LENGTH_LENGTH], (void*) &(message.content), (size_t) message.length );
+	memcpy( (void*) &(*bytes)[TYPE_LENGTH+SENDER_LENGTH+LENGTH_LENGTH], (void*) message.content, (size_t) message.length );
 
 	return 1;
 	}

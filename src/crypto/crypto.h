@@ -6,14 +6,16 @@
 
 #include "../debug.h"
 
-#define DHT_SIGNATURE_LENGTH 256
+#define DHTD_SIGNATURE_LENGTH 256
 
 typedef struct {
 	uint8_t data[32];
 	} Digest_t;
 
+#define DHTD_DIGEST_LENGTH sizeof(((Digest_t*)0)->data)
+
 typedef struct {
-	uint8_t data[DHT_SIGNATURE_LENGTH];
+	uint8_t data[DHTD_SIGNATURE_LENGTH];
 	} Signature_t;
 
 typedef RSA*
