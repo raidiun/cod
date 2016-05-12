@@ -1,0 +1,42 @@
+FIND <NodeID>
+  Find the value of NodeID, respond with best guess or value
+
+SET <NodeID> <Value>
+  Set the value of NodeID to Value
+
+KNOW
+  Respond with knowledge of nearer node or value
+
+ESTABLISH <NodeID> <Key>
+  Create a publickey record, now can only be changed with signing
+  Still has a TTL to prevent pollution
+
+CHALLENGE <Challenge>
+RESPOND <Reponse>
+
+
+Receive a SET request, if know nearer nodes, forward request
+If already hold data, return to sender
+If receive SET from forward location, store for durability with reduced TTL
+
+On TTL expiry, attempt to contact owner for updated version.
+If not found, 
+
+Nodes encrypt messages with recipient's public key
+Therefore only recipient can decrypt
+
+Message -> Digest -> SignedMessage -> SymEncrypt -> AsymEncryptKey -> EncryptedMessage
+
+// Node AFAF wants value of BCBC, tries nearest nodes it knows about
+
+AFAF: FIND BCBC -> BC12, BC34
+
+BC12: KNOW BCBB <Adr> <Key> -> AFAF
+BC34: KNOW BBCF <Adr> <Key> -> AFAF
+
+// Node AFAF now has knowledge of BCBB and BBCF, tries again with new nearer nodes
+
+AFAF: FIND BCBC -> BCBB, BBCF
+
+BCCF: KNOW BCBB <Adr> <Key> -> AFAF
+BCBB: KNOW BCBC <Val> -> AFAF
