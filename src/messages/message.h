@@ -3,6 +3,8 @@
 
 #include <inttypes.h>
 
+#include "../debug.h"
+
 #include "../crypto/crypto.h"
 
 #include "../nodes.h"
