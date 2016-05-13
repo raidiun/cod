@@ -2,8 +2,10 @@
 #define DHT_CRYPTO_H
 
 #include <inttypes.h>
-#include "/usr/local/include/openssl/rsa.h"
-#include "/usr/local/include/openssl/evp.h"
+
+#include <openssl/rsa.h>
+#include <openssl/evp.h>
+#include <openssl/err.h>
 
 #include "../debug.h"
 

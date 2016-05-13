@@ -1,49 +1,109 @@
 #include "crypto.h"
 
 int encryptByteStream(uint8_t* bytes, int len, SymKey_t* key, SymIV_t* iv, uint8_t** encBytes, int* encLen) {
+	if( bytes == NULL )    { DEBUGMSG("encryptByteStream: bytes is NULL\r\n");    return DHTD_ERROR; }
+	if( len == 0 )         { DEBUGMSG("encryptByteStream: len is zero\r\n");      return DHTD_ERROR; }
+	if( key == NULL )      { DEBUGMSG("encryptByteStream: key is NULL\r\n");      return DHTD_ERROR; }
+	if( iv == NULL )       { DEBUGMSG("encryptByteStream: iv is NULL\r\n");       return DHTD_ERROR; }
+	if( encBytes == NULL ) { DEBUGMSG("encryptByteStream: encBytes is NULL\r\n"); return DHTD_ERROR; }
+	if( encLen == NULL )   { DEBUGMSG("encryptByteStream: encLen is NULL\r\n");   return DHTD_ERROR; }
+	
+	int err = 0;
+	
 	EVP_CIPHER_CTX cipherCtx;
 	EVP_CIPHER_CTX_init(&cipherCtx);
 
-	EVP_EncryptInit_ex(&cipherCtx, EVP_aes_256_cbc(), NULL, (unsigned char*) (key->data), (unsigned char*) (iv->data) );
+	err = EVP_EncryptInit_ex(&cipherCtx, EVP_aes_256_cbc(), NULL, (unsigned char*) (key->data), (unsigned char*) (iv->data) );
+	if( err == 0 ) {
+		int rsaErr = ERR_peek_last_error();
+		DEBUGMSG("encryptByteStream: Error in EVP_EncryptInit_ex (%i: %s)\r\n",rsaErr,ERR_error_string(rsaErr,NULL));
+		return DHTD_ERROR;
+		}
 
 	int encLength = len + EVP_MAX_BLOCK_LENGTH;
-	(*encBytes) = malloc(sizeof(uint8_t)*encLength);	
+	(*encBytes) = malloc(sizeof(uint8_t)*encLength);
+	if( (*encBytes) == NULL )   { DEBUGMSG("encryptByteStream: NULL pointer allocated to encBytes\r\n");   return DHTD_ERROR; }
 
 	int mainLen;
 
-	EVP_EncryptUpdate(&cipherCtx, (unsigned char*) (*encBytes), &mainLen, (unsigned char*) bytes, len );
+	err = EVP_EncryptUpdate(&cipherCtx, (unsigned char*) (*encBytes), &mainLen, (unsigned char*) bytes, len );
+	if( err == 0 ) {
+		int rsaErr = ERR_peek_last_error();
+		DEBUGMSG("encryptByteStream: Error in EVP_EncryptUpdate (%i: %s)\r\n",rsaErr,ERR_error_string(rsaErr,NULL));
+		return DHTD_ERROR;
+		}
 
 	int endLen;
 
 	EVP_EncryptFinal_ex(&cipherCtx, (unsigned char*) &((*encBytes)[mainLen]), &endLen );
+	if( err == 0 ) {
+		int rsaErr = ERR_peek_last_error();
+		DEBUGMSG("encryptByteStream: Error in EVP_EncryptFinal_ex (%i: %s)\r\n",rsaErr,ERR_error_string(rsaErr,NULL));
+		return DHTD_ERROR;
+		}
 	
 	(*encLen) = mainLen + endLen;
 
-	EVP_CIPHER_CTX_cleanup(&cipherCtx);
+	err = EVP_CIPHER_CTX_cleanup(&cipherCtx);
+	if( err == 0 ) {
+		int rsaErr = ERR_peek_last_error();
+		DEBUGMSG("encryptByteStream: Error in EVP_CIPHER_CTX_cleanup (%i: %s)\r\n",rsaErr,ERR_error_string(rsaErr,NULL));
+		return DHTD_ERROR;
+		}
 
 	return 1;	
 	}
 
 int decryptByteStream(uint8_t* bytes, int len, SymKey_t* key, SymIV_t* iv, uint8_t** decBytes, int* decLen) {
+	if( bytes == NULL )    { DEBUGMSG("decryptByteStream: bytes is NULL\r\n");    return DHTD_ERROR; }
+	if( len == 0 )         { DEBUGMSG("decryptByteStream: len is zero\r\n");      return DHTD_ERROR; }
+	if( key == NULL )      { DEBUGMSG("decryptByteStream: key is NULL\r\n");      return DHTD_ERROR; }
+	if( iv == NULL )       { DEBUGMSG("decryptByteStream: iv is NULL\r\n");       return DHTD_ERROR; }
+	if( decBytes == NULL ) { DEBUGMSG("decryptByteStream: decBytes is NULL\r\n"); return DHTD_ERROR; }
+	if( decLen == NULL )   { DEBUGMSG("decryptByteStream: decLen is NULL\r\n");   return DHTD_ERROR; }
+	
+	int err = 0;
+	
 	EVP_CIPHER_CTX cipherCtx;
 	EVP_CIPHER_CTX_init(&cipherCtx);
 
-	EVP_DecryptInit_ex(&cipherCtx, EVP_aes_256_cbc(), NULL, (unsigned char*) (key->data), (unsigned char*) (iv->data) );
+	err = EVP_DecryptInit_ex(&cipherCtx, EVP_aes_256_cbc(), NULL, (unsigned char*) (key->data), (unsigned char*) (iv->data) );
+	if( err == 0 ) {
+		int rsaErr = ERR_peek_last_error();
+		DEBUGMSG("decryptByteStream: Error in EVP_DecryptInit_ex (%i: %s)\r\n",rsaErr,ERR_error_string(rsaErr,NULL));
+		return DHTD_ERROR;
+		}
 
 	int decLength = len;
 	(*decBytes) = malloc(sizeof(uint8_t)*decLength);
+	if( (*decBytes) == NULL )   { DEBUGMSG("decryptByteStream: NULL pointer allocated to decBytes\r\n");   return DHTD_ERROR; }
 
 	int mainLen;
 
-	EVP_DecryptUpdate(&cipherCtx, (unsigned char*) (*decBytes), &mainLen, (unsigned char*) bytes, len );
+	err = EVP_DecryptUpdate(&cipherCtx, (unsigned char*) (*decBytes), &mainLen, (unsigned char*) bytes, len );
+	if( err == 0 ) {
+		int rsaErr = ERR_peek_last_error();
+		DEBUGMSG("decryptByteStream: Error in EVP_DecryptUpdate (%i: %s)\r\n",rsaErr,ERR_error_string(rsaErr,NULL));
+		return DHTD_ERROR;
+		}
 
 	int endLen;
 	
-	EVP_DecryptFinal_ex(&cipherCtx, (unsigned char*) &((*decBytes)[mainLen]), &endLen );
+	err = EVP_DecryptFinal_ex(&cipherCtx, (unsigned char*) &((*decBytes)[mainLen]), &endLen );
+	if( err == 0 ) {
+		int rsaErr = ERR_peek_last_error();
+		DEBUGMSG("decryptByteStream: Error in EVP_DecryptFinal_ex (%i: %s)\r\n",rsaErr,ERR_error_string(rsaErr,NULL));
+		return DHTD_ERROR;
+		}
 
 	(*decLen) = mainLen + endLen;
 
-	EVP_CIPHER_CTX_cleanup(&cipherCtx);
+	err = EVP_CIPHER_CTX_cleanup(&cipherCtx);
+	if( err == 0 ) {
+		int rsaErr = ERR_peek_last_error();
+		DEBUGMSG("decryptByteStream: Error in EVP_CIPHER_CTX_cleanup (%i: %s)\r\n",rsaErr,ERR_error_string(rsaErr,NULL));
+		return DHTD_ERROR;
+		}
 
 	return 1;
 	}
