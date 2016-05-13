@@ -14,6 +14,14 @@
 #define PORT 9898
 #define BUFSIZE 1024
 
+void hexDump(uint8_t* bytes, int len) {
+	printf("XD:");
+	for(int i=0; i<len; i++) {
+		printf("%02x",bytes[i]);
+		}
+	printf("\r\n");
+	}
+
 void testAsymCrypto() {
 	Digest_t digest;
 
@@ -37,24 +45,46 @@ void testAsymCrypto() {
 		}
 	printf("\r\n");
 
-	printf("Verifying signature...");
+	printf("Verifying signature...\r\n");
 	int verify = verifySignature(digest, sig, (PubKey_t) keyPair);
 	printf("Done, result: %i\r\n",verify);
+
+	printf("Testing KIV Encryption...\r\n");
+
+	SymKey_t key = {"abcdefghijklmnopqrstuvwxyz01234"};
+	SymIV_t iv = {"0123456789abcde"};
+
+	printf(" With K:\r\n");
+	hexDump(key.data,DHTD_SYMKEY_BYTE_LENGTH);	
+	printf(" With IV:\r\n");
+	hexDump(iv.data,DHTD_SYMIV_BYTE_LENGTH);	
+
+	uint8_t* kivBytes;
+
+	printf("Encrypting KIV pair...\r\n");
+	encryptKIV(&key, &iv, (PubKey_t) keyPair, &kivBytes);
+	printf("Done\r\n");
+	hexDump(kivBytes,DHTD_ENC_KIVPAIR_BYTE_LENGTH);	
+
+	SymKey_t outKey;
+	SymIV_t outIV;
+
+	printf("Decrypting KIV pair...\r\n");
+	decryptKIV(kivBytes, (SecKey_t) keyPair, &outKey, &outIV);
+	printf("Done\r\n");
+
+	printf(" Got K:\r\n");
+	hexDump(outKey.data,DHTD_SYMKEY_BYTE_LENGTH);	
+	printf(" Got IV:\r\n");
+	hexDump(outIV.data,DHTD_SYMIV_BYTE_LENGTH);	
+
 	}
 
 void testSymCrypto() {
 	char content[] = "Lorem ipsum dolor sit amet";
 
-	SymKey_t key;
-	for(int i=0; i<DHTD_SYMKEY_BYTE_LENGTH; i++) {
-		key.data[i] = 'A';
-		}
-
-	SymIV_t iv;
-	for(int i=0; i<DHTD_SYMIV_BYTE_LENGTH; i++) {
-		iv.data[i] = 'A';
-		}
-
+	SymKey_t key = {"abcdefghijklmnopqrstuvwxyz01234"};
+	SymIV_t iv = {"0123456789abcde"};
 
 	uint8_t* encBytes;
 	int encLen;
@@ -164,14 +194,6 @@ void testOutboundSocket(int port) {
 	sendto(sockfd, message, strlen(message), 0, (struct sockaddr*) &sendTo, sizeof(SockAddr_t));
 	}
 
-void hexDump(uint8_t* bytes, int len) {
-	printf("XD:");
-	for(int i=0; i<len; i++) {
-		printf("%02x",bytes[i]);
-		}
-	printf("\r\n");
-	}
-
 void testFullMessagePath() {
 	Digest_t digest;
 
@@ -242,6 +264,61 @@ Final message:\r\n\
 
 	}
 
+PubKey_t returnSecondArg(NodeID_t nodeID, void* callbackArg) {
+	return (PubKey_t) callbackArg;
+	}
+
+void testMessageDencode() {
+	Digest_t digest;
+
+	RAND_seed(&(digest.data),DHTD_DIGEST_LENGTH);
+
+	printf("Generating RSA Keypair...");
+	RSA* keyPair = RSA_generate_key(2048, 65537, NULL, NULL);
+	printf("Done\r\n");
+
+	printf("Building message...      ");
+	Message_t message;
+	char content[] = "Lorem ipsum dolor sit amet";
+	message.type = MT_FIND;
+	message.nodeID = (NodeID_t) 0x0102030405060708;
+	message.content = (void*) content;
+	message.length = strlen(content);
+	printf("Done\r\n");
+
+	printf("Message built:\r\n Type:    %i\r\n nodeID:  %016llx\r\n length:  %i\r\n content: %.*s\r\n",
+		message.type, message.nodeID, message.length, message.length, message.content);
+
+	printf("Building node info...    ");
+	NodeInfo_t nodeInfo;
+	nodeInfo.id = 0x0102030405060708;
+	nodeInfo.key = (PubKey_t) keyPair;
+	printf("Done\r\n");
+
+	printf("Encoding message...      ");
+	uint8_t* encMessage;
+	int encMessageLen;
+	encodeMessage(message, &nodeInfo, &nodeInfo , &encMessage, &encMessageLen);
+	printf("Done\r\n");
+	hexDump(encMessage,encMessageLen);
+	
+	printf("Decoding message...      ");
+	Message_t ret;
+	decodeMessage(encMessage, encMessageLen, &nodeInfo, &ret, &returnSecondArg, keyPair );
+	printf("Done\r\n");
+	
+	free(encMessage);
+	
+	printf("\
+Final message:\r\n\
+ Type:    %i\r\n\
+ nodeID:  %016llx\r\n\
+ length:  %i\r\n\
+ content: %.*s\r\n",
+ ret.type, ret.nodeID, ret.length, ret.length, ret.content);
+
+	}
+
 int main(int argc, char** argv) {
 
 	int port;
@@ -256,8 +333,9 @@ int main(int argc, char** argv) {
 //	testSymCrypto();
 //	testMessaging();
 
-	testFullMessagePath();
+//	testFullMessagePath();
 
+	testMessageDencode();
 
 //	testInboundSocket(port);
 

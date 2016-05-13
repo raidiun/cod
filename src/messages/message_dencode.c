@@ -39,7 +39,7 @@ int encodeMessage(Message_t message, NodeInfo_t* sender, NodeInfo_t* recipient ,
 	return 1;
 	}
 
-int decodeMessage(uint8_t* bytes, int len, NodeInfo_t* recipient, Message_t* message) {
+int decodeMessage(uint8_t* bytes, int len, NodeInfo_t* recipient, Message_t* message, PubKey_t (*getSenderPublicKey)(NodeID_t,void*), void* callbackArg ) {
 
 	// Extract key and IV from bytes
 
@@ -58,7 +58,7 @@ int decodeMessage(uint8_t* bytes, int len, NodeInfo_t* recipient, Message_t* mes
 	getMessageFromBytes(decBytes, decLen, &ret); // Rather than fully unpacking here, use knowledge of packet to get sender?
 
 	// Get senders public key
-	PubKey_t senderKey = getPublicKey(ret.nodeID);
+	PubKey_t senderKey = (*getSenderPublicKey)(ret.nodeID,callbackArg);
 
 	int res = verifyByteStream(decBytes, decLen, senderKey );
 

@@ -54,7 +54,9 @@ int encodeMessage(Message_t message, NodeInfo_t* sender, NodeInfo_t* recipient ,
 
 /* decodeMessage: Decode the byte stream of length <len> beginning at <bytes> sent to <recipient>.
     The result is placed in <message>
+    A callback to retrieve the senders public key must be supplied (<getSenderPublicKey>)
+    This callback is passed the sender's nodeID and the <callbackArg> parameter
 */
-int decodeMessage(uint8_t* bytes, int len, NodeInfo_t* recipient, Message_t* message);
+int decodeMessage(uint8_t* bytes, int len, NodeInfo_t* recipient, Message_t* message, PubKey_t (*getSenderPublicKey)(NodeID_t,void*), void* callbackArg );
 
 #endif//DHTD_MESSAGE_H
