@@ -7,10 +7,10 @@
 
 #define ERROREXIT(MSG,NUM) fprintf(stderr,MSG " : %i\r\n", errno); exit(NUM)
 
-#ifndef QUIETERROR 
-  #define ERRORMSG(...) fprintf(stderr,__VA_ARGS__) 
+#ifndef QUIETERROR
+	#define ERRORMSG(...) fprintf(stderr,__VA_ARGS__) 
 #else 
-  #define ERRORMSG(...) 
+	#define ERRORMSG(...) 
 #endif 
 
 #ifdef DEBUG
