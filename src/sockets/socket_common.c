@@ -8,8 +8,6 @@
 
 #include <netdb.h> // netdb: functions for hostname lookup
 
-#include "../debug.h"
-
 #include "socket.h"
 
 SockFD_t createSocket() {
