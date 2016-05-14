@@ -3,7 +3,7 @@ ifeq ($(origin CC), default)
 endif
 export CC
 
-override CFLAGS += -I/usr/local/include/
+override CFLAGS += -I/usr/local/include/ -DDEBUG
 export CFLAGS
 
 LIBS:=/usr/local/Cellar/openssl/1.0.2h/lib/libcrypto.a

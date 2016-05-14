@@ -13,6 +13,6 @@ int bindSocket(SockFD_t sockfd, SockAddr_t listenAddr) {
 	
 	int err = bind((int) sockfd, (struct sockaddr*) &listenAddr, sizeof(listenAddr));
 	if(err < 0) { ERROREXIT("bindSocket: Error binding socket",4); }
-        DEBUGMSG("Socket bound")
+        DEBUGMSG("Socket bound");
 	return 1;
 	}
