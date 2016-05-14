@@ -2,3 +2,4 @@ build
 dhtd
 src/*/.*.dep
 *.pem
+*.conf
