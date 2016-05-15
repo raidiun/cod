@@ -1,2 +1,0 @@
-../../build/routes/routeHandler.o: routeHandler.c routeHandler.h \
-  ../sockets/sockets.h
