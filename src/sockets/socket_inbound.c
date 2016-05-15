@@ -2,8 +2,6 @@
 
 #include <sys/socket.h>
 
-#include "../debug.h"
-
 #include "socket.h"
 
 int bindSocket(SockFD_t sockfd, SockAddr_t listenAddr) {
@@ -12,7 +10,6 @@ int bindSocket(SockFD_t sockfd, SockAddr_t listenAddr) {
 	setsockopt(sockfd, SOL_SOCKET, SO_REUSEADDR, (const void *)&optval , sizeof(int));
 	
 	int err = bind((int) sockfd, (struct sockaddr*) &listenAddr, sizeof(listenAddr));
-	if(err < 0) { ERROREXIT("bindSocket: Error binding socket",4); }
-        DEBUGMSG("Socket bound")
+	if(err < 0) { DEBUGMSG("bindSocket: Error binding socket"); return DHTD_ERROR; }
 	return 1;
 	}
