@@ -12,3 +12,5 @@
 #else
 	#define DEBUGMSG(...)
 #endif
+
+#define DHTD_ERROR -1
